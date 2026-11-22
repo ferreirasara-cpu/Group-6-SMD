@@ -1,100 +1,194 @@
-# Shopping Detective — Group 6
+<div align="center">
 
-**Theme:** online price comparison for smart, budget-aware shopping. Shopping Detective
-searches several online stores for a product, shows where it is cheapest, tracks how prices
-move, alerts users when a price drops, and tells them how much they saved against their
+# 🔎 Shopping Detective
+
+**Find where it's cheapest. Know when to buy. See what you saved.**
+
+*Group 6 · Group Project*
+
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker_Compose-2496ED?logo=docker&logoColor=white)
+![Azure](https://img.shields.io/badge/Azure-0078D4?logo=microsoftazure&logoColor=white)
+![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?logo=githubactions&logoColor=white)
+
+[Theme](#-theme) · [Modules](#-modules) · [Savings Dashboard](#-cross-module-feature-the-savings-dashboard) · [Architecture](#%EF%B8%8F-architecture-planned) · [Shared jobs](#-shared-jobs) · [Conventions](#-conventions-agreement) · [How we work](#-how-we-work)
+
+</div>
+
+---
+
+## 💡 Theme
+
+**Online price comparison for smart, budget-aware shopping.** Shopping Detective searches
+several online stores for a product, shows where it is cheapest, tracks how prices move,
+alerts users when a price drops, and tells them how much they saved against their
 shopping budget.
 
-## What it does
+### What a search returns
 
-When a user searches for a product, for example "iPhone 17", the app shows:
+Search for a product, for example **"iPhone 17"**, and the app shows:
 
-- the product name and an image
-- the online stores that sell it, with each store's price and shipping cost
-- the best total price (price + shipping) and a link to that store
-- the price history of the product and whether now is a good time to buy
+| | |
+|---|---|
+| 🏷️ **Product** | name and image |
+| 🏬 **Stores** | every store that sells it, with its price and shipping cost |
+| 💶 **Best deal** | the lowest total price (price + shipping) and a link to that store |
+| 📈 **Timing** | the price history and whether now is a good time to buy |
 
-Logged-in users can also set price alerts, build a shopping list and find the cheapest way to
-buy it, record what they bought and follow their savings against a monthly budget.
+Logged-in users can also set **price alerts**, build a **shopping list** and find the
+cheapest way to buy it, record their **purchases** and follow their **savings** against a
+monthly budget.
 
-## Modules
+---
 
-Each member owns one module: its own main entity, Python package, API router
+## 🧩 Modules
+
+Each member owns one module end to end: its own main entity, Python package, API router
 (`/api/<module>`), tests and page in the frontend.
 
 | Module | Main entity (CRUD) | Calculated result | Owner |
 |---|---|---|---|
-| `users` — users and price alerts | `User`, `PriceAlert` (user, product, target price) | which alerts are triggered by the current best price, and how far each product is from its target | Blas G. |
-| `stores` — stores and price acquisition | `Store` (name, website, country, shipping cost, free-shipping threshold) | total cost per store (price + shipping) and each store's share of best prices | Sara F. |
-| `products` — catalogue and normalization | `Product` (name, brand, EAN, category, image URL) | matching the same product across stores into one normalized product; search ranking | Jose Luis S. |
-| `prices` — price offers and history | `PriceOffer` (product, store, price, observed at, URL) | current lowest price, 30-day min / max / average and % change | Tomas M. |
-| `baskets` — shopping lists | `ShoppingList`, `ShoppingListItem` | cheapest basket: total in one store vs. split across stores, including shipping | Susana P. |
-| `purchases` — purchases and budget | `Purchase` (user, product, store, price paid, date), `Budget` (user, month, amount) | savings vs. average market price; budget spent and remaining this month | Emile H. |
+| 👤 **`users`**<br/>users and price alerts | `User`, `PriceAlert`<br/>(user, product, target price) | which alerts the current best price triggers, and how far each product is from its target | Blas G. |
+| 🏬 **`stores`**<br/>stores and price acquisition | `Store`<br/>(name, website, country, shipping cost, free-shipping threshold) | total cost per store (price + shipping) and each store's share of best prices | Sara F. |
+| 📦 **`products`**<br/>catalogue and normalization | `Product`<br/>(name, brand, EAN, category, image URL) | matching the same product across stores into one normalized product; search ranking | Jose Luis S. |
+| 📈 **`prices`**<br/>price offers and history | `PriceOffer`<br/>(product, store, price, observed at, URL) | current lowest price, 30-day min / max / average and % change | Emile H. |
+| 🛒 **`baskets`**<br/>shopping lists | `ShoppingList`, `ShoppingListItem` | cheapest basket: total in one store vs. split across stores, including shipping | Susana P. |
+| 🧾 **`purchases`**<br/>purchases and budget | `Purchase` (user, product, store, price paid, date)<br/>`Budget` (user, month, amount) | savings vs. average market price; budget spent and remaining this month | Tomas M. |
 
-`users` is the user-management module: every other module that holds personal data
-(alerts, shopping lists, purchases, budgets) links it to a `user_id`.
+> **User management.** `users` owns who uses the app. Every module that holds personal data
+> (alerts, shopping lists, purchases, budgets) links it to a `user_id`.
 
-## Cross-module feature: the Savings Dashboard
+---
 
-One page per user that brings all the modules together:
+## 📊 Cross-module feature: the Savings Dashboard
 
-| Dashboard block | Uses |
+One page per user that brings the modules together:
+
+| Dashboard block | Built from |
 |---|---|
-| Money saved this month, and budget spent / remaining | `purchases`, which calls `prices` for the average market price of each item bought |
-| Price alerts triggered today | `users`, which calls `prices` for the current best price |
-| Cheapest way to buy my shopping list, and in which stores | `baskets`, which calls `prices` and `stores` (shipping costs) |
-| Price trend of the products I follow | `prices` and `products` |
+| 💰 Money saved this month, budget spent and remaining | `purchases` → asks `prices` for the average market price of each item bought |
+| 🔔 Price alerts triggered today | `users` → asks `prices` for the current best price |
+| 🛒 Cheapest way to buy my shopping list, and where | `baskets` → asks `prices` for prices and `stores` for shipping costs |
+| 📈 Price trend of the products I follow | `prices` + `products` |
 
-Modules talk to each other only through their API (`/api/<module>`), never through each
-other's tables.
+> Modules talk to each other **only through their API** (`/api/<module>`), never through
+> each other's tables.
 
-## Shared jobs
+---
 
-| Member | Shared job | Responsible for |
+## 🏗️ Architecture (planned)
+
+```mermaid
+flowchart LR
+    U([👤 User]) --> FE
+
+    subgraph FE[🖥️ Web frontend]
+        DASH[📊 Savings Dashboard]
+        PAGES[One page per module]
+    end
+
+    FE -->|HTTP /api/...| API
+
+    subgraph API[⚙️ FastAPI application]
+        USERS[👤 users<br/>User · PriceAlert]
+        STORES[🏬 stores<br/>Store]
+        PRODUCTS[📦 products<br/>Product]
+        PRICES[📈 prices<br/>PriceOffer]
+        BASKETS[🛒 baskets<br/>ShoppingList]
+        PURCHASES[🧾 purchases<br/>Purchase · Budget]
+    end
+
+    STORES -->|fetches offers| EXT[(🌐 Online stores)]
+    STORES -->|new offers| PRICES
+    PRODUCTS -->|normalized products| PRICES
+    USERS -->|current best price| PRICES
+    PURCHASES -->|average market price| PRICES
+    BASKETS -->|prices| PRICES
+    BASKETS -->|shipping costs| STORES
+    USERS -. user_id .- BASKETS
+    USERS -. user_id .- PURCHASES
+
+    API --> DB[(🐘 PostgreSQL)]
+    AZ[☁️ Azure] -. hosts .- API
+    CI[✅ GitHub Actions] -. tests every PR .- API
+
+    classDef hub fill:#fde68a,stroke:#b45309,color:#000
+    classDef module fill:#dbeafe,stroke:#1d4ed8,color:#000
+    classDef infra fill:#e5e7eb,stroke:#4b5563,color:#000
+    class PRICES hub
+    class USERS,STORES,PRODUCTS,BASKETS,PURCHASES module
+    class DB,AZ,CI,EXT infra
+```
+
+<sub>Solid arrows: one module calls another module's API. Dotted lines: data linked to a user, or shared infrastructure. `prices` (yellow) is the hub most modules depend on.</sub>
+
+---
+
+## 🤝 Shared jobs
+
+On top of their module, each member is responsible for one part of the shared product.
+
+| Shared job | Responsible for | Owner |
 |---|---|---|
-| Emile H. | Continuous integration | the GitHub Actions workflow: Ruff and the tests on every pull request |
-| Blas G. | Containers and configuration | the Dockerfile, Docker Compose, settings from environment variables, `.env.example` |
-| Jose Luis S. | Cloud deployment | the Azure resources, the deployment and its cost |
-| Susana P. | Frontend shell and dashboard | the common layout, navigation and the Savings Dashboard |
-| Tomas M. | Database | the shared database setup, the models' common base and the sample data |
-| Sara F. | Documentation and board | the README, the architecture diagram, and the issues and project board |
+| ✅ Continuous integration | the GitHub Actions workflow: Ruff and the tests on every pull request | Tomas M. |
+| 🐳 Containers and configuration | the Dockerfile, Docker Compose, settings from environment variables, `.env.example` | Blas G. |
+| ☁️ Cloud deployment | the Azure resources, the deployment and its cost | Jose Luis S. |
+| 🖥️ Frontend shell and dashboard | the common layout, navigation and the Savings Dashboard | Emile H. |
+| 🐘 Database | the shared database setup, the models' common base and the sample data | Sara F. |
+| 📝 Documentation and board | the README, the architecture diagram, and the issues and project board | Susana P. |
 
-With six members we cover six of the seven shared jobs. Code review is not one person's job:
-every member reviews, and the rules are in "How we work" below.
+> With six members we cover six of the seven shared jobs. Code review is everyone's job:
+> the rules are in [How we work](#-how-we-work).
 
-## Conventions agreement
+---
 
-- **Stack:** Python 3.12, FastAPI, SQLAlchemy 2, PostgreSQL, pytest, Ruff, Docker Compose,
-  Azure; the frontend pages are served by the same application. Same stack as the labs.
-- **Layout:** one package per module under `app/<module>/` (`models.py`, `schemas.py`,
-  `service.py`, `router.py`), tests in `tests/<module>/`.
-- **Names:** packages and tables in lowercase plural English (`price_offers`), classes in
-  singular CamelCase (`PriceOffer`).
-- **API:** every route under `/api/<module>`, JSON, plural nouns
-  (`GET /api/prices/offers?product_id=12`); errors as `{"detail": "..."}` with the right status code.
-- **Money:** `Decimal` in Python and `NUMERIC(12, 2)` in the database, never a float. Every
-  amount has a currency (`EUR` by default); in JSON, amounts are strings (`"999.00"`).
-- **Dates:** timestamps in UTC as `timestamptz`, ISO 8601 in JSON
-  (`2026-11-23T12:00:00Z`); calendar dates as `date` (`2026-11-23`).
-- **Users:** every personal record has a `user_id` that refers to `users`.
-- **External data:** store data comes in through connectors in `stores`. Tests and CI never
-  call real stores: they use the sample data and recorded responses.
+## 📐 Conventions agreement
 
-## How we work
-- One repository, `main` protected: no direct pushes, every change through a pull request.
-- One short-lived branch per issue, named `<type>/<issue>-<short-name>`
-  (`feat/12-price-history`, `docs/1-m1-readme`).
-- Small pull requests that link their issue (`Closes #12`), approved by at least one other
-  member, merged into `main` with a merge commit. The CI must pass before merging.
-- Bring `main` into your branch often (`git pull origin main`).
-- Trunk-based development, not Gitflow: one long-lived branch (`main`) and short branches
-  merged within a few days, so modules are integrated continuously and conflicts stay small.
-- Every task is a GitHub issue, assigned to one member, on the project board
-  (To do → In progress → In review → Done).
-- Milestones are marked with a tag on the reviewed commit of `main` (`m1`, `m2`, …).
+| Topic | Agreement |
+|---|---|
+| **Stack** | Python 3.12, FastAPI, SQLAlchemy 2, PostgreSQL, pytest, Ruff, Docker Compose, Azure. The frontend pages are served by the same application. |
+| **Layout** | one package per module under `app/<module>/` (`models.py`, `schemas.py`, `service.py`, `router.py`); tests in `tests/<module>/` |
+| **Names** | packages and tables in lowercase plural English (`price_offers`); classes in singular CamelCase (`PriceOffer`) |
+| **API** | every route under `/api/<module>`, JSON, plural nouns (`GET /api/prices/offers?product_id=12`); errors as `{"detail": "..."}` with the right status code |
+| **Money** | `Decimal` in Python, `NUMERIC(12, 2)` in the database, **never a float**; every amount has a currency (`EUR` by default); amounts are strings in JSON (`"999.00"`) |
+| **Dates** | timestamps in UTC as `timestamptz`, ISO 8601 in JSON (`2026-11-23T12:00:00Z`); calendar dates as `date` (`2026-11-23`) |
+| **Users** | every personal record has a `user_id` that refers to `users` |
+| **External data** | store data comes in through connectors in `stores`; tests and CI never call real stores, they use sample data and recorded responses |
 
-## How to run it
+---
 
-## Team
+## 🔀 How we work
 
-Sara F. · Jose Luis S. · Tomas M. · Blas G. · Susana P. · Emile H.
+We use **trunk-based development**: one long-lived branch (`main`) and short branches merged
+within a few days, so modules are integrated continuously and conflicts stay small.
+
+1. 🎫 **Every task is a GitHub issue**, assigned to one member, on the project board
+   (*To do → In progress → In review → Done*).
+2. 🌿 **One short-lived branch per issue**, named `<type>/<issue>-<short-name>`
+   (`feat/12-price-history`, `docs/1-m1-readme`).
+3. 🔄 **Bring `main` into your branch often** (`git pull origin main`).
+4. 📬 **Small pull requests** that link their issue (`Closes #12`).
+5. 👀 **Reviewed and approved by another member**, and the CI passes, before merging.
+6. 🔒 **`main` is protected**: no direct pushes; merged with a **merge commit**.
+7. 🏁 **Milestones are tagged** on the reviewed commit of `main` (`m1`, `m2`, …).
+
+---
+
+## ▶️ How to run it
+
+> 🚧 Coming with the containers milestone: `cp .env.example .env`, then `docker compose up`.
+
+---
+
+## 👥 Team
+
+| Member | Module | Shared job |
+|---|---|---|
+| Sara F. | 🏬 `stores` | 🐘 Database |
+| Jose Luis S. | 📦 `products` | ☁️ Cloud deployment |
+| Emile H. | 📈 `prices` | 🖥️ Frontend shell and dashboard |
+| Blas G. | 👤 `users` | 🐳 Containers and configuration |
+| Susana P. | 🛒 `baskets` | 📝 Documentation and board |
+| Tomas M. | 🧾 `purchases` | ✅ Continuous integration |
